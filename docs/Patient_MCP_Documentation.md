@@ -41,7 +41,7 @@ Searches for patients based on criteria.
 
 - **Module Path**: `modules/patient.py`
 - **Dependency**: Uses the `requests` library for synchronous HTTP calls.
-- **Base URL**: Configurable via `FHIR_BASE_URL` in the `.env` file (defaults to `https://fhir.datainterops.com/fhir`).
+- **Base URL**: Configurable via `FHIR_BASE_URL` in the `.env` file (defaults to `http://172.20.10.14:8080/fhir`).
 
 ## Error Handling
 

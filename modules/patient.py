@@ -19,11 +19,11 @@ Core Attributes:
 - managingOrganization: Organization managing the record
 """
 
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Union
 import requests
 import os
 
-FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "https://fhir.datainterops.com/fhir")
+FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "http://172.20.10.14:8080/fhir")
 
 def get_headers(auth_token: str) -> Dict[str, str]:
     """
@@ -40,7 +40,24 @@ def get_headers(auth_token: str) -> Dict[str, str]:
         "Accept": "application/fhir+json",
     }
 
-def create_patient(patient_resource: Dict[str, Any], auth_token: str) -> Dict[str, Any]:
+def _handle_response(response: requests.Response) -> Union[Dict[str, Any], str]:
+    """
+    Handle the response from the FHIR server.
+    If success, return JSON.
+    If error, return the error JSON (OperationOutcome) or raise with details.
+    """
+    try:
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError:
+        # Try to return the OperationOutcome if available
+        try:
+            return response.json()
+        except ValueError:
+            # If not JSON, raise the original error with text
+            raise ValueError(f"FHIR Server Error ({response.status_code}): {response.text}")
+
+def create_patient(patient_resource: Dict[str, Any], auth_token: str) -> Union[Dict[str, Any], str]:
     """
     Create a new Patient resource.
     
@@ -55,10 +72,9 @@ def create_patient(patient_resource: Dict[str, Any], auth_token: str) -> Dict[st
     """
     url = f"{FHIR_BASE_URL}/Patient"
     response = requests.post(url, json=patient_resource, headers=get_headers(auth_token))
-    response.raise_for_status()
-    return response.json()
+    return _handle_response(response)
 
-def get_patient(patient_id: str, auth_token: str) -> Dict[str, Any]:
+def get_patient(patient_id: str, auth_token: str) -> Union[Dict[str, Any], str]:
     """
     Retrieve a Patient resource by ID.
     
@@ -72,10 +88,9 @@ def get_patient(patient_id: str, auth_token: str) -> Dict[str, Any]:
     """
     url = f"{FHIR_BASE_URL}/Patient/{patient_id}"
     response = requests.get(url, headers=get_headers(auth_token))
-    response.raise_for_status()
-    return response.json()
+    return _handle_response(response)
 
-def update_patient(patient_id: str, patient_resource: Dict[str, Any], auth_token: str) -> Dict[str, Any]:
+def update_patient(patient_id: str, patient_resource: Dict[str, Any], auth_token: str) -> Union[Dict[str, Any], str]:
     """
     Update an existing Patient resource.
     
@@ -92,8 +107,7 @@ def update_patient(patient_id: str, patient_resource: Dict[str, Any], auth_token
     url = f"{FHIR_BASE_URL}/Patient/{patient_id}"
     patient_resource["id"] = patient_id
     response = requests.put(url, json=patient_resource, headers=get_headers(auth_token))
-    response.raise_for_status()
-    return response.json()
+    return _handle_response(response)
 
 def delete_patient(patient_id: str, auth_token: str) -> str:
     """
@@ -109,8 +123,15 @@ def delete_patient(patient_id: str, auth_token: str) -> str:
     """
     url = f"{FHIR_BASE_URL}/Patient/{patient_id}"
     response = requests.delete(url, headers=get_headers(auth_token))
-    response.raise_for_status()
-    return f"Patient {patient_id} deleted successfully."
+    try:
+        response.raise_for_status()
+        return f"Patient {patient_id} deleted successfully."
+    except requests.exceptions.HTTPError:
+        try:
+            # Return OperationOutcome as string representation if possible, or just the error
+            return str(response.json())
+        except ValueError:
+            raise ValueError(f"FHIR Server Error ({response.status_code}): {response.text}")
 
 def search_patient(
     auth_token: str, 
@@ -125,7 +146,7 @@ def search_patient(
     phone: Optional[str] = None,
     organization: Optional[str] = None,
     active: Optional[bool] = None
-) -> Dict[str, Any]:
+) -> Union[Dict[str, Any], str]:
     """
     Search for Patients using various FHIR v4 search parameters.
     
@@ -163,6 +184,5 @@ def search_patient(
     
     url = f"{FHIR_BASE_URL}/Patient"
     response = requests.get(url, params=params, headers=get_headers(auth_token))
-    response.raise_for_status()
-    return response.json()
+    return _handle_response(response)
 

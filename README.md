@@ -78,7 +78,7 @@ Add this to your `claude_desktop_config.json`:
       "command": "C:\\Users\\Sayeed\\WorkSpace\\HAPI_MCP\\.venv\\Scripts\\python.exe",
       "args": ["C:\\Users\\Sayeed\\WorkSpace\\HAPI_MCP\\main.py"],
       "env": {
-        "FHIR_BASE_URL": "https://fhir.datainterops.com/fhir"
+        "FHIR_BASE_URL": "http://172.20.10.14:8080/fhir"
       }
     }
   }
@@ -124,7 +124,7 @@ You can build and run the server using Docker:
 docker build -t hapi-mcp .
 
 # Run the container (SSE mode)
-docker run -p 8000:8000 -e FHIR_BASE_URL=https://fhir.datainterops.com/fhir hapi-mcp
+docker run -p 8000:8000 -e FHIR_BASE_URL=http://172.20.10.14:8080/fhir hapi-mcp
 ```
 
 ### 2. PaaS (Render, Railway, etc.)
@@ -139,5 +139,5 @@ The project includes a `Procfile` for easy deployment to PaaS providers.
 Ensure the following environment variables are set in your deployment environment:
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FHIR_BASE_URL` | The base URL of the HAPI FHIR server | `https://fhir.datainterops.com/fhir` |
+| `FHIR_BASE_URL` | The base URL of the HAPI FHIR server | `http://172.20.10.14:8080/fhir` |
 | `PORT` | The port for the SSE server (used by PaaS) | `8000` |

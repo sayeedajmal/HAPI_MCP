@@ -17,7 +17,7 @@ COPY . .
 # EXPOSE 8000
 
 # Define environment variable
-ENV FHIR_BASE_URL="https://fhir.datainterops.com/fhir"
+ENV FHIR_BASE_URL="http://172.20.10.14:8080/fhir"
 
 # Run the application
 CMD ["python", "main.py"]
