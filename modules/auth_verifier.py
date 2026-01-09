@@ -8,7 +8,9 @@ load_dotenv()
 
 class FHIRTokenVerifier(TokenVerifier):
     def __init__(self):
-        base_url = os.getenv("FHIR_BASE_URL", "http://172.20.10.14:8080/fhir")
+        base_url = os.getenv("FHIR_BASE_URL")
+        if not base_url:
+            raise ValueError("FHIR_BASE_URL environment variable is not set")
         # Normalize URL: remove trailing slash
         if base_url.endswith('/'):
             base_url = base_url[:-1]

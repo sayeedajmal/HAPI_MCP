@@ -23,7 +23,9 @@ from typing import Dict, Optional, Any, Union
 import requests
 import os
 
-FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "http://172.20.10.14:8080/fhir")
+FHIR_BASE_URL = os.getenv("FHIR_BASE_URL")
+if not FHIR_BASE_URL:
+    raise ValueError("FHIR_BASE_URL environment variable is not set")
 
 def get_headers(auth_token: str) -> Dict[str, str]:
     """

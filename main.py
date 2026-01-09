@@ -1,18 +1,24 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables before importing modules that depend on them
+load_dotenv()
+
 from mcp.server.fastmcp import FastMCP, Context
 from mcp.server.auth.settings import AuthSettings
 from modules import patient
 from modules.auth_verifier import FHIRTokenVerifier
-import os
 
 # Initialize FastMCP with Authentication
 port = int(os.environ.get("PORT", 8000))
 
 # Configure Auth Settings
-# We need a dummy issuer_url because Pydantic requires it, 
-# but our custom verifier ignores it for validation.
+fhir_base_url = os.getenv("FHIR_BASE_URL", "http://172.20.10.14:8080/fhir")
+# Derive issuer and resource server from base URL if possible
+# For HAPI FHIR, usually the base is the resource server.
 auth_settings = AuthSettings(
-    issuer_url="http://172.20.10.14:8080", 
-    resource_server_url="http://172.20.10.14:8080"
+    issuer_url=fhir_base_url.replace("/fhir", ""), 
+    resource_server_url=fhir_base_url
 )
 
 mcp = FastMCP(
