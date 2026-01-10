@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from mcp.server.fastmcp import FastMCP
-from modules import patient
+from modules import fhir
 
 # Initialize FastMCP
 port = int(os.environ.get("PORT", 8000))
@@ -16,94 +16,74 @@ mcp = FastMCP(
     port=port
 )
 
-# Register Patient Tools
-@mcp.tool()
-def create_patient(patient_resource: dict) -> dict:
-    """
-    Create a new Patient resource (FHIR v4).
-    
-    Endpoint: POST [base]/Patient
-    Creates a new patient resource with a server-assigned ID.
-    
-    Args:
-        patient_resource: Dictionary containing FHIR Patient resource data.
-    """
-    return patient.create_patient(patient_resource)
+# --- Generic FHIR Tools ---
 
 @mcp.tool()
-def get_patient(patient_id: str) -> dict:
+def create_resource(resource_type: str, resource: dict) -> dict:
     """
-    Retrieve a Patient resource by ID (FHIR v4).
-    
-    Endpoint: GET [base]/Patient/[id]
-    Retrieves the complete patient record.
+    Create a new FHIR resource.
     
     Args:
-        patient_id: The unique FHIR ID of the patient.
+        resource_type: The type of resource (e.g., "Patient", "Observation").
+        resource: The resource data.
     """
-    return patient.get_patient(patient_id)
+    return fhir.create_resource(resource_type, resource)
 
 @mcp.tool()
-def update_patient(patient_id: str, patient_resource: dict) -> dict:
+def read_resource(resource_type: str, resource_id: str) -> dict:
     """
-    Update an existing Patient resource (FHIR v4).
-    
-    Endpoint: PUT [base]/Patient/[id]
-    Updates an existing resource or creates it if allowed.
+    Read a FHIR resource by ID.
     
     Args:
-        patient_id: The unique FHIR ID of the patient.
-        patient_resource: Updated FHIR Patient resource data.
+        resource_type: The type of resource.
+        resource_id: The ID of the resource.
     """
-    return patient.update_patient(patient_id, patient_resource)
+    return fhir.read_resource(resource_type, resource_id)
 
 @mcp.tool()
-def delete_patient(patient_id: str) -> str:
+def update_resource(resource_type: str, resource_id: str, resource: dict) -> dict:
     """
-    Delete a Patient resource by ID (FHIR v4).
-    
-    Endpoint: DELETE [base]/Patient/[id]
+    Update a FHIR resource.
     
     Args:
-        patient_id: The unique FHIR ID of the patient.
+        resource_type: The type of resource.
+        resource_id: The ID of the resource.
+        resource: The updated resource data.
     """
-    return patient.delete_patient(patient_id)
+    return fhir.update_resource(resource_type, resource_id, resource)
 
 @mcp.tool()
-def search_patient(
-    name: str = None, 
-    identifier: str = None,
-    family: str = None,
-    given: str = None,
-    gender: str = None,
-    birthdate: str = None,
-    address: str = None,
-    email: str = None,
-    phone: str = None,
-    organization: str = None,
-    active: bool = None
-) -> dict:
+def delete_resource(resource_type: str, resource_id: str) -> str:
     """
-    Search for Patients using FHIR v4 parameters.
+    Delete a FHIR resource.
     
-    Available Filters:
-    - name: Matches any name part
-    - family: Family name
-    - given: Given name
-    - gender: male | female | other | unknown
-    - birthdate: YYYY-MM-DD
-    - identifier: MRN, SSN, etc.
-    - address: Address component
-    - email: Email address
-    - phone: Phone number
-    - organization: Managing organization
-    - active: Active status (True/False)
+    Args:
+        resource_type: The type of resource.
+        resource_id: The ID of the resource.
     """
-    return patient.search_patient(
-        name, identifier, family, given, gender, 
-        birthdate, address, email, phone, organization, active
-    )
+    return fhir.delete_resource(resource_type, resource_id)
+
+@mcp.tool()
+def search_resources(resource_type: str, query: str = None) -> dict:
+    """
+    Search for FHIR resources.
     
+    Args:
+        resource_type: The type of resource.
+        query: The query string (e.g., "name=doe&active=true").
+    """
+    return fhir.search_resources(resource_type, query)
+
+@mcp.tool()
+def create_transaction(bundle: dict) -> dict:
+    """
+    Process a FHIR transaction bundle.
+    
+    Args:
+        bundle: The FHIR Bundle resource.
+    """
+    return fhir.create_transaction(bundle)
+
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")
 
