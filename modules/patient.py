@@ -27,17 +27,14 @@ FHIR_BASE_URL = os.getenv("FHIR_BASE_URL")
 if not FHIR_BASE_URL:
     raise ValueError("FHIR_BASE_URL environment variable is not set")
 
-def get_headers(auth_token: str) -> Dict[str, str]:
+def get_headers() -> Dict[str, str]:
     """
-    Get headers for FHIR requests using the provided JWT token.
+    Get headers for FHIR requests.
     
-    Args:
-        auth_token: The Bearer token for authentication.
     Returns:
-        A dictionary containing the Authorization and Content-Type headers.
+        A dictionary containing the Content-Type and Accept headers.
     """
     return {
-        "Authorization": f"Bearer {auth_token}",
         "Content-Type": "application/fhir+json",
         "Accept": "application/fhir+json",
     }
@@ -59,7 +56,7 @@ def _handle_response(response: requests.Response) -> Union[Dict[str, Any], str]:
             # If not JSON, raise the original error with text
             raise ValueError(f"FHIR Server Error ({response.status_code}): {response.text}")
 
-def create_patient(patient_resource: Dict[str, Any], auth_token: str) -> Union[Dict[str, Any], str]:
+def create_patient(patient_resource: Dict[str, Any]) -> Union[Dict[str, Any], str]:
     """
     Create a new Patient resource.
     
@@ -70,13 +67,12 @@ def create_patient(patient_resource: Dict[str, Any], auth_token: str) -> Union[D
     
     Args:
         patient_resource: The Patient resource data to create.
-        auth_token: Authentication token.
     """
     url = f"{FHIR_BASE_URL}/Patient"
-    response = requests.post(url, json=patient_resource, headers=get_headers(auth_token))
+    response = requests.post(url, json=patient_resource, headers=get_headers())
     return _handle_response(response)
 
-def get_patient(patient_id: str, auth_token: str) -> Union[Dict[str, Any], str]:
+def get_patient(patient_id: str) -> Union[Dict[str, Any], str]:
     """
     Retrieve a Patient resource by ID.
     
@@ -86,13 +82,12 @@ def get_patient(patient_id: str, auth_token: str) -> Union[Dict[str, Any], str]:
     
     Args:
         patient_id: The unique ID of the patient.
-        auth_token: Authentication token.
     """
     url = f"{FHIR_BASE_URL}/Patient/{patient_id}"
-    response = requests.get(url, headers=get_headers(auth_token))
+    response = requests.get(url, headers=get_headers())
     return _handle_response(response)
 
-def update_patient(patient_id: str, patient_resource: Dict[str, Any], auth_token: str) -> Union[Dict[str, Any], str]:
+def update_patient(patient_id: str, patient_resource: Dict[str, Any]) -> Union[Dict[str, Any], str]:
     """
     Update an existing Patient resource.
     
@@ -104,14 +99,13 @@ def update_patient(patient_id: str, patient_resource: Dict[str, Any], auth_token
     Args:
         patient_id: The unique ID of the patient to update.
         patient_resource: The updated Patient resource data.
-        auth_token: Authentication token.
     """
     url = f"{FHIR_BASE_URL}/Patient/{patient_id}"
     patient_resource["id"] = patient_id
-    response = requests.put(url, json=patient_resource, headers=get_headers(auth_token))
+    response = requests.put(url, json=patient_resource, headers=get_headers())
     return _handle_response(response)
 
-def delete_patient(patient_id: str, auth_token: str) -> str:
+def delete_patient(patient_id: str) -> str:
     """
     Delete a Patient resource by ID.
     
@@ -121,10 +115,9 @@ def delete_patient(patient_id: str, auth_token: str) -> str:
     
     Args:
         patient_id: The unique ID of the patient to delete.
-        auth_token: Authentication token.
     """
     url = f"{FHIR_BASE_URL}/Patient/{patient_id}"
-    response = requests.delete(url, headers=get_headers(auth_token))
+    response = requests.delete(url, headers=get_headers())
     try:
         response.raise_for_status()
         return f"Patient {patient_id} deleted successfully."
@@ -136,7 +129,6 @@ def delete_patient(patient_id: str, auth_token: str) -> str:
             raise ValueError(f"FHIR Server Error ({response.status_code}): {response.text}")
 
 def search_patient(
-    auth_token: str, 
     name: Optional[str] = None, 
     identifier: Optional[str] = None,
     family: Optional[str] = None,
@@ -168,7 +160,6 @@ def search_patient(
     - active: Filter by active status (true/false)
     
     Args:
-        auth_token: Authentication token.
         **kwargs: Various search filters.
     """
     params = {}
@@ -185,6 +176,6 @@ def search_patient(
     if active is not None: params["active"] = str(active).lower()
     
     url = f"{FHIR_BASE_URL}/Patient"
-    response = requests.get(url, params=params, headers=get_headers(auth_token))
+    response = requests.get(url, params=params, headers=get_headers())
     return _handle_response(response)
 
