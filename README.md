@@ -1,17 +1,17 @@
 # HAPI FHIR MCP Project
 
-A modular Model Context Protocol (MCP) server for interacting with a HAPI FHIR JPA server. This project allows LLMs (like Claude or ChatGPT) to perform FHIR operations (Patient, Organization, etc.) using user-provided JWT tokens.
+A modular Model Context Protocol (MCP) server for interacting with a HAPI FHIR JPA server. This project allows LLMs (like Claude or ChatGPT) to perform generic FHIR operations (Create, Read, Update, Delete, Search, Transaction) on any resource type using user-provided JWT tokens.
 
 ## Architecture
 
-The project uses a modular architecture where each FHIR resource type is implemented as a separate module in the `modules/` directory. The `main.py` script serves as the central entry point.
+The project uses a modular architecture where the core FHIR interaction logic is implemented in `modules/fhir.py`. The `main.py` script serves as the central entry point and exposes generic tools.
 
 ```
 HAPI_MCP/
 ├── .venv/               # Virtual environment (Root)
 ├── modules/             # Resource-specific modules
 │   ├── __init__.py
-│   └── patient.py       # Patient resource tools
+│   └── fhir.py          # Generic FHIR resource tools
 ├── main.py              # Central MCP Server (Entry point)
 ├── requirements.txt      # Project dependencies
 ├── .env.template        # Configuration template
@@ -108,6 +108,17 @@ After running this, open your browser to: `http://localhost:5173`
 > **Port Summary:**
 > - **8000**: Default port for the MCP Server in SSE mode.
 > - **5173**: Default port for the MCP Inspector web UI.
+
+## Available Tools
+
+The server exposes the following generic tools:
+
+- `create_resource(resource_type, resource)`: Create a new FHIR resource.
+- `read_resource(resource_type, resource_id)`: Read a FHIR resource by ID.
+- `update_resource(resource_type, resource_id, resource)`: Update a FHIR resource.
+- `delete_resource(resource_type, resource_id)`: Delete a FHIR resource.
+- `search_resources(resource_type, query)`: Search for FHIR resources.
+- `create_transaction(bundle)`: Process a FHIR transaction bundle.
 
 ## Security Note (Passthrough JWT)
 This server **does not store** your credentials. Every request requires an `auth_token` provided by the LLM (which you must provide to the LLM during the session). This ensures that your HAPI FHIR server remains secure and only processes requests on your behalf.
